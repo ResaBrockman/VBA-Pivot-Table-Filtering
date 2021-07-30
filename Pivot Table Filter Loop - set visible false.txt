@@ -1,0 +1,93 @@
+Sub Weekly_Tax_Pivs()
+'
+' Weekly_Tax_Pivs Macro
+'
+'Scroll to bottom to see how to pivot table filter
+'
+    Sheets.Add After:=ActiveSheet
+    Sheets("Sheet1").Select
+    Range("Table[#All]").Select
+    ActiveWorkbook.PivotCaches.Create(SourceType:=xlDatabase, SourceData:= _
+        "Table", Version:=6).CreatePivotTable TableDestination:="Sheet2!R3C1", _
+        TableName:="PivotTable1", DefaultVersion:=6
+    Sheets("Sheet2").Select
+    Cells(3, 1).Select
+    With ActiveSheet.PivotTables("PivotTable1")
+        .ColumnGrand = True
+        .HasAutoFormat = True
+        .DisplayErrorString = False
+        .DisplayNullString = True
+        .EnableDrilldown = True
+        .ErrorString = ""
+        .MergeLabels = False
+        .NullString = ""
+        .PageFieldOrder = 2
+        .PageFieldWrapCount = 0
+        .PreserveFormatting = True
+        .RowGrand = True
+        .SaveData = True
+        .PrintTitles = False
+        .RepeatItemsOnEachPrintedPage = True
+        .TotalsAnnotation = False
+        .CompactRowIndent = 1
+        .InGridDropZones = False
+        .DisplayFieldCaptions = True
+        .DisplayMemberPropertyTooltips = False
+        .DisplayContextTooltips = True
+        .ShowDrillIndicators = True
+        .PrintDrillIndicators = False
+        .AllowMultipleFilters = False
+        .SortUsingCustomLists = True
+        .FieldListSortAscending = False
+        .ShowValuesRow = False
+        .CalculatedMembersInFilters = False
+        .RowAxisLayout xlCompactRow
+    End With
+    With ActiveSheet.PivotTables("PivotTable1").PivotCache
+        .RefreshOnFileOpen = False
+        .MissingItemsLimit = xlMissingItemsDefault
+    End With
+    ActiveSheet.PivotTables("PivotTable1").RepeatAllLabels xlRepeatLabels
+    With ActiveSheet.PivotTables("PivotTable1").PivotFields("Benefit/deduction")
+        .Orientation = xlRowField
+        .Position = 1
+    End With
+    With ActiveSheet.PivotTables("PivotTable1").PivotFields("Statement date")
+        .Orientation = xlColumnField
+        .Position = 1
+    End With
+    ActiveSheet.PivotTables("PivotTable1").AddDataField ActiveSheet.PivotTables( _
+        "PivotTable1").PivotFields("Total benefit/deduction amount"), _
+        "Sum of Total benefit/deduction amount", xlSum
+
+'HERE IS THE STUFF YOU WANT
+
+'Loop to set everything except USA FIT and last item to not visible
+
+    ActiveSheet.PivotTables("PivotTable1").PivotFields("Benefit/deduction"). _
+        EnableMultiplePageItems = True
+        With ActiveSheet.PivotTables("PivotTable1").PivotFields("Benefit/deduction")
+                For i = 1 To .PivotItems.Count - 1
+                    If .PivotItems(i).Name <> "USA FIT" Then
+                        .PivotItems(.PivotItems(i).Name).Visible = False
+                    End If
+                Next i
+
+'What we want to be visible:
+
+        On Error Resume Next
+            .PivotItems("USA FIT").Visible = True
+            .PivotItems("USA FIT Add Tax").Visible = True
+            .PivotItems("Medicare").Visible = True
+            .PivotItems("Medicare Addl").Visible = True
+            .PivotItems("USA FIT Suppl Tax").Visible = True
+            .PivotItems("OASDI").Visible = True
+        On Error GoTo 0
+
+'Set last item to not visible after all
+
+            .PivotItems(.PivotItems(.PivotItems.Count).Name).Visible = False
+        End With
+
+
+End Sub
